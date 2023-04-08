@@ -18,7 +18,7 @@ from usage_tracker import UsageTracker
 
 def message_text(message: Message) -> str:
     """
-    Returns the text of a message, excluding any bot commands.
+   Trả về văn bản của một tin nhắn, không bao gồm bất kỳ lệnh bot nào.
     """
     message_text = message.text
     if message_text is None:
@@ -32,7 +32,7 @@ def message_text(message: Message) -> str:
 
 class ChatGPTTelegramBot:
     """
-    Class representing a ChatGPT Telegram Bot.
+   Lớp đại diện cho ChatGPT Telegram Bot.
     """
 
     def __init__(self, config: dict, openai: OpenAIHelper):
@@ -44,19 +44,19 @@ class ChatGPTTelegramBot:
         self.config = config
         self.openai = openai
         self.commands = [
-            BotCommand(command='help', description='Show help message'),
-            BotCommand(command='reset', description='Reset the conversation. Optionally pass high-level instructions '
+            BotCommand(command='help', description='Hiển thị thông báo trợ giúp'),
+            BotCommand(command='reset', description='Đặt lại cuộc trò chuyện. Tùy chọn vượt qua hướng dẫn cấp cao '
                                                     '(e.g. /reset You are a helpful assistant)'),
-            BotCommand(command='image', description='Generate image from prompt (e.g. /image cat)'),
-            BotCommand(command='stats', description='Get your current usage statistics'),
-            BotCommand(command='resend', description='Resend the latest message')
+            BotCommand(command='image', description='Tạo hình ảnh từ dấu nhắc (e.g. /image cat)'),
+            BotCommand(command='stats', description='Nhận số liệu thống kê sử dụng hiện tại của bạn'),
+            BotCommand(command='resend', description='Gửi lại tin nhắn mới nhất')
         ]
         self.group_commands = [
-            BotCommand(command='chat', description='Chat with the bot!')
+            BotCommand(command='chat', description='Trò chuyện với bot!')
         ] + self.commands
-        self.disallowed_message = "Sorry, you are not allowed to use this bot. You can check out the source code at " \
+        self.disallowed_message = "Xin lỗi, bạn không được phép sử dụng bot này. Bạn có thể kiểm tra mã nguồn tại " \
                                   "https://github.com/n3d1117/chatgpt-telegram-bot"
-        self.budget_limit_message = "Sorry, you have reached your monthly usage limit."
+        self.budget_limit_message = "Xin lỗi, bạn đã đạt đến giới hạn sử dụng hàng tháng của mình."
         self.usage = {}
         self.last_message = {}
 
@@ -66,28 +66,28 @@ class ChatGPTTelegramBot:
         """
         commands = self.group_commands if self.is_group_chat(update) else self.commands
         commands_description = [f'/{command.command} - {command.description}' for command in commands]
-        help_text = 'I\'m a ChatGPT bot, talk to me!' + \
+        help_text = 'Tôi là bot ChatGPT, hãy nói chuyện với tôi!' + \
                     '\n\n' + \
                     '\n'.join(commands_description) + \
                     '\n\n' + \
-                    'Send me a voice message or file and I\'ll transcribe it for you!' + \
+                    'Gửi cho tôi một tin nhắn thoại hoặc tập tin và tôi sẽ phiên âm nó cho bạn!' + \
                     '\n\n' + \
-                    "Open source at https://github.com/n3d1117/chatgpt-telegram-bot"
+                    "Mở nguồn tại https://github.com/n3d1117/chatgpt-telegram-bot"
         await update.message.reply_text(help_text, disable_web_page_preview=True)
 
 
     async def stats(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
-        Returns token usage statistics for current day and month.
+        Trả về thống kê sử dụng mã thông báo cho ngày và tháng hiện tại.
         """
         if not await self.is_allowed(update, context):
-            logging.warning(f'User {update.message.from_user.name} (id: {update.message.from_user.id}) '
-                f'is not allowed to request their usage statistics')
+            logging.warning(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id}) '
+                f'không được phép yêu cầu số liệu thống kê sử dụng của họ')
             await self.send_disallowed_message(update, context)
             return
 
-        logging.info(f'User {update.message.from_user.name} (id: {update.message.from_user.id}) '
-            f'requested their usage statistics')
+        logging.info(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id}) '
+            f'yêu cầu số liệu thống kê sử dụng của họ')
         
         user_id = update.message.from_user.id
         if user_id not in self.usage:
@@ -102,51 +102,51 @@ class ChatGPTTelegramBot:
         chat_messages, chat_token_length = self.openai.get_conversation_stats(chat_id)
         budget = await self.get_remaining_budget(update)
 
-        text_current_conversation = f"*Current conversation:*\n"+\
-                     f"{chat_messages} chat messages in history.\n"+\
-                     f"{chat_token_length} chat tokens in history.\n"+\
+        text_current_conversation = f"*Cuộc trò chuyện hiện tại:*\n"+\
+                     f"{chat_messages} tin nhắn trò chuyện trong lịch sử.\n"+\
+                     f"{chat_token_length} mã thông báo trò chuyện trong lịch sử.\n"+\
                      f"----------------------------\n"
-        text_today = f"*Usage today:*\n"+\
-                     f"{tokens_today} chat tokens used.\n"+\
-                     f"{images_today} images generated.\n"+\
-                     f"{transcribe_durations[0]} minutes and {transcribe_durations[1]} seconds transcribed.\n"+\
-                     f"💰 For a total amount of ${cost_today:.2f}\n"+\
+        text_today = f"*sử dụng ngày hôm nay:*\n"+\
+                     f"{tokens_today} mã thông báo trò chuyện được sử dụng.\n"+\
+                     f"{images_today}hình ảnh được tạo.\n"+\
+                     f"{transcribe_durations[0]} phút và {transcribe_durations[1]} giây được sao chép.\n"+\
+                     f"💰 Đối với tổng số lượng ${cost_today:.2f}\n"+\
                      f"----------------------------\n"
-        text_month = f"*Usage this month:*\n"+\
-                     f"{tokens_month} chat tokens used.\n"+\
-                     f"{images_month} images generated.\n"+\
-                     f"{transcribe_durations[2]} minutes and {transcribe_durations[3]} seconds transcribed.\n"+\
-                     f"💰 For a total amount of ${cost_month:.2f}"
+        text_month = f"*Sử dụng trong tháng này:*\n"+\
+                     f"{tokens_month} mã thông báo trò chuyện được sử dụng.\n"+\
+                     f"{images_month} hình ảnh được tạo.\n"+\
+                     f"{transcribe_durations[2]} phút và {transcribe_durations[3]} giây được sao chép.\n"+\
+                     f"💰 Đối với tổng số lượng ${cost_month:.2f}"
         # text_budget filled with conditional content
         text_budget = "\n\n"
         if budget < float('inf'):
-            text_budget += f"You have a remaining budget of ${budget:.2f} this month.\n"
+            text_budget += f"Bạn có ngân sách còn lại là ${budget:.2f} tháng này.\n"
         # add OpenAI account information for admin request
         if self.is_admin(update):
-            text_budget += f"Your OpenAI account was billed ${self.openai.get_billing_current_month():.2f} this month."
+            text_budget += f"Tài khoản OpenAI của bạn đã được lập hóa đơn ${self.openai.get_billing_current_month():.2f} tháng này."
         
         usage_text = text_current_conversation + text_today + text_month + text_budget
         await update.message.reply_text(usage_text, parse_mode=constants.ParseMode.MARKDOWN)
 
     async def resend(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
-        Resend the last request
+        Gửi lại yêu cầu cuối cùng
         """
         if not await self.is_allowed(update, context):
-            logging.warning(f'User {update.message.from_user.name}  (id: {update.message.from_user.id})'
-                            f' is not allowed to resend the message')
+            logging.warning(f'Người dùng {update.message.from_user.name}  (id: {update.message.from_user.id})'
+                            f' không được phép gửi lại tin nhắn')
             await self.send_disallowed_message(update, context)
             return
 
         chat_id = update.effective_chat.id
         if chat_id not in self.last_message:
-            logging.warning(f'User {update.message.from_user.name} (id: {update.message.from_user.id})'
-                            f' does not have anything to resend')
-            await context.bot.send_message(chat_id=chat_id, text="You have nothing to resend")
+            logging.warning(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id})'
+                            f' không có gì để gửi lại')
+            await context.bot.send_message(chat_id=chat_id, text="Bạn không có gì để gửi lại")
             return
 
         # Update message text, clear self.last_message and send the request to prompt
-        logging.info(f'Resending the last prompt from user: {update.message.from_user.name} '
+        logging.info(f'Gửi lại lời nhắc cuối cùng từ người dùng: {update.message.from_user.name} '
                      f'(id: {update.message.from_user.id})')
         with update.message._unfrozen() as message:
             message.text = self.last_message.pop(chat_id)
@@ -158,18 +158,18 @@ class ChatGPTTelegramBot:
         Resets the conversation.
         """
         if not await self.is_allowed(update, context):
-            logging.warning(f'User {update.message.from_user.name} (id: {update.message.from_user.id}) '
-                f'is not allowed to reset the conversation')
+            logging.warning(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id}) '
+                f'không được phép đặt lại cuộc trò chuyện')
             await self.send_disallowed_message(update, context)
             return
 
-        logging.info(f'Resetting the conversation for user {update.message.from_user.name} '
+        logging.info(f'Đặt lại cuộc trò chuyện cho người dùng {update.message.from_user.name} '
             f'(id: {update.message.from_user.id})...')
 
         chat_id = update.effective_chat.id
         reset_content = message_text(update.message)
         self.openai.reset_chat_history(chat_id=chat_id, content=reset_content)
-        await context.bot.send_message(chat_id=chat_id, text='Done!')
+        await context.bot.send_message(chat_id=chat_id, text='Xong!')
 
     async def image(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
@@ -181,10 +181,10 @@ class ChatGPTTelegramBot:
         chat_id = update.effective_chat.id
         image_query = message_text(update.message)
         if image_query == '':
-            await context.bot.send_message(chat_id=chat_id, text='Please provide a prompt! (e.g. /image cat)')
+            await context.bot.send_message(chat_id=chat_id, text='Vui lòng cung cấp lời nhắc! (e.g. /image cat)')
             return
 
-        logging.info(f'New image generation request received from user {update.message.from_user.name} '
+        logging.info(f'Đã nhận được yêu cầu tạo hình ảnh mới từ người dùng {update.message.from_user.name} '
             f'(id: {update.message.from_user.id})')
 
         async def _generate():
@@ -207,7 +207,7 @@ class ChatGPTTelegramBot:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     reply_to_message_id=self.get_reply_to_message_id(update),
-                    text=f'Failed to generate image: {str(e)}',
+                    text=f'Không thể tạo hình ảnh: {str(e)}',
                     parse_mode=constants.ParseMode.MARKDOWN
                 )
 
@@ -221,7 +221,7 @@ class ChatGPTTelegramBot:
             return
 
         if self.is_group_chat(update) and self.config['ignore_group_transcriptions']:
-            logging.info(f'Transcription coming from group chat, ignoring...')
+            logging.info(f'Phiên âm đến từ cuộc trò chuyện nhóm, bỏ qua...')
             return
 
         chat_id = update.effective_chat.id
@@ -238,7 +238,7 @@ class ChatGPTTelegramBot:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     reply_to_message_id=self.get_reply_to_message_id(update),
-                    text=f'Failed to download audio file: {str(e)}. Make sure the file is not too large. (max 20MB)',
+                    text=f'Không thể tải xuống tệp âm thanh: {str(e)}. Đảm bảo tệp không quá lớne. (max 20MB)',
                     parse_mode=constants.ParseMode.MARKDOWN
                 )
                 return
@@ -247,7 +247,7 @@ class ChatGPTTelegramBot:
             try:
                 audio_track = AudioSegment.from_file(filename)
                 audio_track.export(filename_mp3, format="mp3")
-                logging.info(f'New transcribe request received from user {update.message.from_user.name} '
+                logging.info(f'Đã nhận được yêu cầu phiên âm mới từ người dùng {update.message.from_user.name} '
                     f'(id: {update.message.from_user.id})')
 
             except Exception as e:
@@ -255,7 +255,7 @@ class ChatGPTTelegramBot:
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     reply_to_message_id=self.get_reply_to_message_id(update),
-                    text='Unsupported file type'
+                    text='Loại tập tin không được hỗ trợ'
                 )
                 if os.path.exists(filename):
                     os.remove(filename)
@@ -320,7 +320,7 @@ class ChatGPTTelegramBot:
                 await context.bot.send_message(
                     chat_id=chat_id,
                     reply_to_message_id=self.get_reply_to_message_id(update),
-                    text=f'Failed to transcribe text: {str(e)}',
+                    text=f'Không thể phiên âm văn bản: {str(e)}',
                     parse_mode=constants.ParseMode.MARKDOWN
                 )
             finally:
@@ -339,7 +339,7 @@ class ChatGPTTelegramBot:
         if not await self.check_allowed_and_within_budget(update, context):
             return
         
-        logging.info(f'New message received from user {update.message.from_user.name} (id: {update.message.from_user.id})')
+        logging.info(f'Tin nhắn mới nhận được từ người dùng {update.message.from_user.name} (id: {update.message.from_user.id})')
         chat_id = update.effective_chat.id
         user_id = update.message.from_user.id
         prompt = message_text(update.message)
@@ -351,9 +351,9 @@ class ChatGPTTelegramBot:
                 prompt = prompt[len(trigger_keyword):].strip()
             else:
                 if update.message.reply_to_message and update.message.reply_to_message.from_user.id == context.bot.id:
-                    logging.info('Message is a reply to the bot, allowing...')
+                    logging.info('Tin nhắn là một câu trả lời cho bot, cho phép...')
                 else:
-                    logging.warning('Message does not start with trigger keyword, ignoring...')
+                    logging.warning('Thông báo không bắt đầu bằng từ khóa kích hoạt, bỏ qua...')
                     return
 
         try:
@@ -487,7 +487,7 @@ class ChatGPTTelegramBot:
 
     async def inline_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """
-        Handle the inline query. This is run when you type: @botusername <query>
+        Xử lý truy vấn nội tuyến. Điều này được chạy khi bạn gõ: @botusername <query>
         """
         query = update.inline_query.query
 
@@ -497,7 +497,7 @@ class ChatGPTTelegramBot:
         results = [
             InlineQueryResultArticle(
                 id=str(uuid4()),
-                title='Ask ChatGPT',
+                title='Anh Quốc ChatGPT',
                 input_message_content=InputTextMessageContent(query),
                 description=query,
                 thumb_url='https://user-images.githubusercontent.com/11541888/223106202-7576ff11-2c8e-408d-94ea-b02a7a32149a.png'
@@ -525,7 +525,7 @@ class ChatGPTTelegramBot:
                 parse_mode=constants.ParseMode.MARKDOWN if markdown else None
             )
         except telegram.error.BadRequest as e:
-            if str(e).startswith("Message is not modified"):
+            if str(e).startswith("Tin nhắn không được sửa đổi"):
                 return
             try:
                 await context.bot.edit_message_text(
@@ -534,7 +534,7 @@ class ChatGPTTelegramBot:
                     text=text
                 )
             except Exception as e:
-                logging.warning(f'Failed to edit message: {str(e)}')
+                logging.warning(f'Không chỉnh sửa được tin nhắn: {str(e)}')
                 raise e
 
         except Exception as e:
@@ -543,7 +543,7 @@ class ChatGPTTelegramBot:
 
     async def wrap_with_indicator(self, update: Update, context: CallbackContext, chat_action: constants.ChatAction, coroutine):
         """
-        Wraps a coroutine while repeatedly sending a chat action to the user.
+        Kết thúc một quy trình đăng quang trong khi liên tục gửi một hành động trò chuyện cho người dùng.
         """
         task = context.application.create_task(coroutine(), update=update)
         while not task.done():
@@ -576,7 +576,7 @@ class ChatGPTTelegramBot:
         """
         Handles errors in the telegram-python-bot library.
         """
-        logging.error(f'Exception while handling an update: {context.error}')
+        logging.error(f'Ngoại lệ trong khi xử lý một bản cập nhật: {context.error}')
 
     def is_group_chat(self, update: Update) -> bool:
         """
@@ -595,7 +595,7 @@ class ChatGPTTelegramBot:
             chat_member = await context.bot.get_chat_member(update.message.chat_id, user_id)
             return chat_member.status in [ChatMember.OWNER, ChatMember.ADMINISTRATOR, ChatMember.MEMBER]
         except telegram.error.BadRequest as e:
-            if str(e) == "User not found":
+            if str(e) == "Không tìm thấy người dùng":
                 return False
             else:
                 raise e
@@ -624,10 +624,10 @@ class ChatGPTTelegramBot:
                 if not user.strip():
                     continue
                 if await self.is_user_in_group(update, context, user):
-                    logging.info(f'{user} is a member. Allowing group chat message...')
+                    logging.info(f'{user} là một thành viên. Đang cho phép tin nhắn trò chuyện nhóm...')
                     return True
-            logging.info(f'Group chat messages from user {update.message.from_user.name} '
-                f'(id: {update.message.from_user.id}) are not allowed')
+            logging.info(f'Tin nhắn trò chuyện nhóm từ người dùng {update.message.from_user.name} '
+                f'(id: {update.message.from_user.id}) không được cho phép')
 
         return False
 
@@ -637,7 +637,7 @@ class ChatGPTTelegramBot:
         The first user in the user list is the admin.
         """
         if self.config['admin_user_ids'] == '-':
-            logging.info('No admin user defined.')
+            logging.info('Không có người dùng quản trị nào được xác định.')
             return False
 
         admin_user_ids = self.config['admin_user_ids'].split(',')
@@ -666,7 +666,7 @@ class ChatGPTTelegramBot:
             user_budgets = self.config['monthly_user_budgets'].split(',')
             # check if user is included in budgets list
             if len(user_budgets) <= user_index:
-                logging.warning(f'No budget set for user: {update.message.from_user.name} ({user_id}).')
+                logging.warning(f'Chưa đặt ngân sách cho người dùng: {update.message.from_user.name} ({user_id}).')
                 return 0.0
             user_budget = float(user_budgets[user_index])
             cost_month = self.usage[user_id].get_current_cost()[1]
@@ -697,7 +697,7 @@ class ChatGPTTelegramBot:
             user_budgets = self.config['monthly_user_budgets'].split(',')
             # check if user is included in budgets list
             if len(user_budgets) <= user_index:
-                logging.warning(f'No budget set for user: {update.message.from_user.name} ({user_id}).')
+                logging.warning(f'Chưa đặt ngân sách cho người dùng: {update.message.from_user.name} ({user_id}).')
                 return False
             user_budget = float(user_budgets[user_index])
             cost_month = self.usage[user_id].get_current_cost()[1]
@@ -712,13 +712,13 @@ class ChatGPTTelegramBot:
                     continue
                 if await self.is_user_in_group(update, context, user):
                     if 'guests' not in self.usage:
-                        self.usage['guests'] = UsageTracker('guests', 'all guest users in group chats')
+                        self.usage['guests'] = UsageTracker('guests', 'tất cả người dùng khách trong các cuộc trò chuyện nhóm')
                     if self.config['monthly_guest_budget'] >= self.usage['guests'].get_current_cost()[1]:
                         return True
-                    logging.warning('Monthly guest budget for group chats used up.')
+                    logging.warning('Ngân sách khách hàng tháng cho các cuộc trò chuyện nhóm đã sử dụng hết.')
                     return False
-            logging.info(f'Group chat messages from user {update.message.from_user.name} '
-                f'(id: {update.message.from_user.id}) are not allowed')
+            logging.info(f'Tin nhắn trò chuyện nhóm từ người dùng {update.message.from_user.name} '
+                f'(id: {update.message.from_user.id}) không được cho phép')
         return False
 
     async def check_allowed_and_within_budget(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -729,14 +729,14 @@ class ChatGPTTelegramBot:
         :return: Boolean indicating if the user is allowed to use the bot
         """
         if not await self.is_allowed(update, context):
-            logging.warning(f'User {update.message.from_user.name} (id: {update.message.from_user.id}) '
-                f'is not allowed to use the bot')
+            logging.warning(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id}) '
+                f'không được phép sử dụng bot')
             await self.send_disallowed_message(update, context)
             return False
 
         if not await self.is_within_budget(update, context):
-            logging.warning(f'User {update.message.from_user.name} (id: {update.message.from_user.id}) '
-                f'reached their usage limit')
+            logging.warning(f'Người dùng {update.message.from_user.name} (id: {update.message.from_user.id}) '
+                f'đã đạt đến giới hạn sử dụng của họ')
             await self.send_budget_reached_message(update, context)
             return False
 

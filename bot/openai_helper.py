@@ -19,7 +19,7 @@ GPT_ALL_MODELS = GPT_3_MODELS + GPT_4_MODELS + GPT_4_32K_MODELS
 
 def default_max_tokens(model: str) -> int:
     """
-    Gets the default number of max tokens for the given model.
+    Nhận số lượng mã thông báo tối đa mặc định cho mô hình đã cho.
     :param model: The model name
     :return: The default number of max tokens
     """
